@@ -124,6 +124,9 @@ async function doStuff(form){
     }
   };
   await displayData(form, query)
+  
+  let pieChart = createPieChart(100, [5,5,10,20, 30])
+  document.getElementById("svgs").appendChild(pieChart)
   return false
 }
 
@@ -169,4 +172,38 @@ function xpQueryStringBeforeDate(date){
     }
   }`
   return queryString
+}
+
+function createPieChart(radius, values){
+  let total = values.reduce((runningTotal, elem) => runningTotal+elem)
+  let pieChart = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+  pieChart.setAttribute("width", 2*radius)
+  pieChart.setAttribute("height", 2*radius)
+  let currentAngle = 0
+  for (let value of values){
+    let proportion = value/total
+    let angle = proportion * 2*Math.PI
+    let colourGrayscale = "rgb(" + (currentAngle*255/Math.PI)+", "+ (currentAngle*255/Math.PI) + ", "+(currentAngle*255/Math.PI)+")"
+    let colour = "rgb(" + (255-currentAngle*255/Math.PI) + ", "+(0)+", "+ (currentAngle*255/Math.PI)+")"
+    pieChart.appendChild(createSegmentPath(radius, currentAngle, angle, colour))
+    // pieChart.appendChild(createSegmentPath(radius, currentAngle, angle, colourGrayscale))
+    currentAngle += angle
+  }
+  console.log("pie chart created!")
+
+  return pieChart
+}
+
+function createSegmentPath(r, startAngle, angle, colour){
+  console.log("segment created with r: ", r, " starting angle: ", startAngle, " angle: ", angle, " colour: ", colour)
+  let moveToCenter = "M " + r + ", " + r + " " 
+  let moveToEdge = "L " + (Math.cos(startAngle)*r + r) + ", " + (Math.sin(startAngle)*r + r) + " " 
+  let moveAlongArc = "A " + r + ", " + r + " 0 " + (angle<Math.PI?"0":"1") + "1" + (Math.cos(startAngle+angle)*r + r) + ", " + (Math.sin(startAngle+angle)*r + r) + " "
+  let moveBack = "Z"
+  let pathString = moveToCenter + moveToEdge + moveAlongArc + moveBack
+  let path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+  path.setAttribute("d", pathString)
+  path.setAttribute("fill", colour)
+  path.setAttribute("stroke", "red")
+  return path
 }
