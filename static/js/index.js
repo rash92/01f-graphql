@@ -127,6 +127,7 @@ async function doStuff(form){
   
   let pieChart = createPieChart(100, [5,5,10,20, 30])
   document.getElementById("svgs").appendChild(pieChart)
+  document.getElementById("svgs").appendChild(createLineGraph("","","","","",""))
   return false
 }
 
@@ -194,6 +195,7 @@ function createPieChart(radius, values){
   return pieChart
 }
 
+
 function createSegmentPath(r, startAngle, angle, colour){
   console.log("segment created with r: ", r, " starting angle: ", startAngle, " angle: ", angle, " colour: ", colour)
   let moveToCenter = "M " + r + ", " + r + " " 
@@ -207,3 +209,25 @@ function createSegmentPath(r, startAngle, angle, colour){
   path.setAttribute("stroke", "red")
   return path
 }
+
+function createLineGraph(title, xlabel, ylabel, xaxis, yaxis, labels){
+  let lineGraphSvg = document.createElementNS('http://www.w3.org/2000/svg', "svg")
+  lineGraphSvg.setAttribute("width", "200")
+  lineGraphSvg.setAttribute("height", "200")
+  let xaxisElem = document.createElementNS('http://www.w3.org/2000/svg',"line")
+  xaxisElem.setAttribute("x1", "0")
+  xaxisElem.setAttribute("x2", "200")
+  xaxisElem.setAttribute("y1", "200")
+  xaxisElem.setAttribute("y2", "200")
+  xaxisElem.setAttribute("stroke", "red")
+  let yaxisElem = document.createElementNS('http://www.w3.org/2000/svg',"line")
+  yaxisElem.setAttribute("x1", "0")
+  yaxisElem.setAttribute("x2", "0")
+  yaxisElem.setAttribute("y1", "200")
+  yaxisElem.setAttribute("y2", "0")
+  yaxisElem.setAttribute("stroke", "blue")
+  lineGraphSvg.appendChild(xaxisElem)
+  lineGraphSvg.appendChild(yaxisElem)
+  return lineGraphSvg
+}
+
