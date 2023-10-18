@@ -90,7 +90,6 @@ async function doStuff(form){
         discordId
         discordLogin
         profile
-        attrs
         campus
       }
       transaction {
@@ -125,7 +124,7 @@ async function doStuff(form){
   };
   await displayData(form, query)
   
-  let pieChart = createPieChart(100, [5,5,10,20, 30])
+  let pieChart = createPieChart(100, [5,5,10,20, 30, 50], ["adsadasda","bdsadad","cdsadsa","ddsadsa","edsad", "fdsad"])
   document.getElementById("svgs").appendChild(pieChart)
   document.getElementById("svgs").appendChild(createLineGraph("","time","xp","","",200,200,[[0,0],[10,10],[10,20],[20,25],[50,50],[100,100],[150,200]]))
   return false
@@ -175,21 +174,42 @@ function xpQueryStringBeforeDate(date){
   return queryString
 }
 
-function createPieChart(radius, values){
+function createPieChart(radius, values, labels){
   let total = values.reduce((runningTotal, elem) => runningTotal+elem)
   let pieChart = document.createElementNS("http://www.w3.org/2000/svg", "svg")
   pieChart.setAttribute("width", 2*radius)
-  pieChart.setAttribute("height", 2*radius)
+  pieChart.setAttribute("height", 2*radius + 15*values.length)
+  let keyElem = document.createElementNS("http://www.w3.org/2000/svg","g")
   let currentAngle = 0
-  for (let value of values){
+  for (let index in values){
+    //main pie chart
+    value = values[index]
     let proportion = value/total
     let angle = proportion * 2*Math.PI
     let colourGrayscale = "rgb(" + (currentAngle*255/Math.PI)+", "+ (currentAngle*255/Math.PI) + ", "+(currentAngle*255/Math.PI)+")"
     let colour = "rgb(" + (255-currentAngle*255/Math.PI) + ", "+(0)+", "+ (currentAngle*255/Math.PI)+")"
     pieChart.appendChild(createSegmentPath(radius, currentAngle, angle, colour))
     // pieChart.appendChild(createSegmentPath(radius, currentAngle, angle, colourGrayscale))
+
+    //keys
+    let key = document.createElementNS("http://www.w3.org/2000/svg","g")
+    key.setAttribute("color",colour)
+    
+    let keySquare = document.createElementNS("http://www.w3.org/2000/svg","rect")
+    keySquare.setAttribute("width","10")
+    keySquare.setAttribute("height","10")
+    keySquare.setAttribute("style", "fill:"+colour)
+    keySquare.setAttribute("y", 2*radius + 15*index)
+    let keyLabel = document.createElementNS("http://www.w3.org/2000/svg","text")
+    keyLabel.innerHTML = labels[index]
+    keyLabel.setAttribute("y", 2*radius + 10+ 15*(index))
+    keyLabel.setAttribute("x", 15)
+    key.appendChild(keySquare)
+    key.appendChild(keyLabel)
+    keyElem.appendChild(key)
     currentAngle += angle
   }
+  pieChart.appendChild(keyElem)
   console.log("pie chart created!")
 
   return pieChart
@@ -244,7 +264,6 @@ function createLineGraph(title, xlabel, ylabel, xaxis, yaxis, width, height, poi
   let pointsStr = ""
   for (let point in points){
     pointsStr += " " + (origin[0] + points[point][0]) + "," + (origin[1] - points[point][1])
-    console.log(pointsStr)
   }
   lineElem.setAttribute("points", pointsStr)
   lineElem.setAttribute("stroke", "black")
