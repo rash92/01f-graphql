@@ -1,12 +1,3 @@
-// const addDiv = () => {
-//     let loginElem = document.getElementById("loginForm")
-//     loginElem.innerText = "adding text with js"
-//     console.log("here")
-//     console.log(loginElem)
-// }
-
-// addDiv()
-
 async function processLogin(form) {
   let username = form.username.value;
   let password = form.password.value;
@@ -26,7 +17,7 @@ async function processLogin(form) {
       }
       throw response;
     })
-    .catch((response) => console.log("unable to retrieve jwt: ", response));
+    .catch((response) =>  response);
   return jwt;
 }
 
@@ -53,18 +44,12 @@ async function graphqlRequest(jwt, query) {
 }
 
 async function getData(form, requestedData) {
+  document.getElementById("error").innerText = ""
   let jwt = await processLogin(form);
+  if(!jwt){
+    return
+  }
   let data = await graphqlRequest(jwt, requestedData);
-
-  // let resultsDiv = document.getElementById("results");
-  // if (!data) {
-  //   let errorDiv = document.createElement("div");
-  //   errorDiv.innerText =
-  //     "Unfortunately the request failed, please check your credentials or contact the administrator";
-  //   resultsDiv.appendChild(errorDiv);
-  //   return;
-  // }
-  // addDataToDiv(resultsDiv, data);
   return data;
 }
 
@@ -107,6 +92,7 @@ function createPieChart(radius, values, labels) {
   let pieChart = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   pieChart.setAttribute("width", 2 * radius);
   pieChart.setAttribute("height", 2 * radius + 15 * values.length);
+
   let keyElem = document.createElementNS("http://www.w3.org/2000/svg", "g");
   let currentAngle = 0;
   for (let index in values) {
@@ -205,13 +191,19 @@ function createLineGraph(
   height,
   points
 ) {
-  let origin = [50, 50 + height];
+  let origin = [100, 100 + height];
   let lineGraphSvg = document.createElementNS(
     "http://www.w3.org/2000/svg",
     "svg"
   );
   lineGraphSvg.setAttribute("width", 1.5 * width);
   lineGraphSvg.setAttribute("height", 1.5 * height);
+  let titleElem = document.createElementNS("http://www.w3.org/2000/svg", "text")
+  titleElem.setAttribute("x", width/2)
+  titleElem.setAttribute("y", 25)
+  titleElem.innerHTML = title
+  lineGraphSvg.appendChild(titleElem)
+
   let xaxisElem = document.createElementNS(
     "http://www.w3.org/2000/svg",
     "line"
@@ -236,25 +228,44 @@ function createLineGraph(
     "http://www.w3.org/2000/svg",
     "text"
   );
-  xlabelElem.setAttribute("x", width / 2);
-  xlabelElem.setAttribute("y", 75 + height);
+  xlabelElem.setAttribute("x", origin[0] + width / 2);
+  xlabelElem.setAttribute("y", origin[1]+25);
   xlabelElem.innerHTML = xlabel;
   lineGraphSvg.appendChild(xlabelElem);
   let ylabelElem = document.createElementNS(
     "http://www.w3.org/2000/svg",
     "text"
   );
-  ylabelElem.setAttribute("x", 0);
+  ylabelElem.setAttribute("x", 25);
   ylabelElem.setAttribute("y", height / 2);
   ylabelElem.innerHTML = ylabel;
   lineGraphSvg.appendChild(ylabelElem);
 
+  let xlabelMaxElem = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "text"
+  );
+  xlabelMaxElem.setAttribute("x", origin[0] + width);
+  xlabelMaxElem.setAttribute("y", origin[1]+25);
+  xlabelMaxElem.innerHTML = xmax;
+  lineGraphSvg.appendChild(xlabelMaxElem);
+  let ylabelMaxElem = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "text"
+  );
+  ylabelMaxElem.setAttribute("x", 25);
+  ylabelMaxElem.setAttribute("y", origin[1]-height);
+  ylabelMaxElem.innerHTML = ymax;
+  lineGraphSvg.appendChild(ylabelMaxElem);
+
+  
   let lineElem = document.createElementNS(
     "http://www.w3.org/2000/svg",
     "polyline"
   );
   let pointsStr = "";
   for (let point in points) {
+
     pointsStr +=
       " " +
       (origin[0] + points[point][0]*width/xmax) +
@@ -343,6 +354,9 @@ async function basicInfo(form){
   }
 
   let data = await getData(form, query)
+  if(!data){
+    return
+  }
   let basicInfo = {
     username: data.user[0].login,
     campus: data.user[0].campus,
@@ -354,17 +368,21 @@ async function basicInfo(form){
 }
 
  function displayBasicInfo(basicInfo){
-  let div = document.getElementById("basicInfo")
-  let greeting = document.createElement("p")
-  greeting.innerText = "Hello " + basicInfo.firstName + " " + basicInfo.lastName + "!"
-  div.appendChild(greeting)
-  let platformInfo = document.createElement("p")
-  platformInfo.innerText = "your username is: " + basicInfo.username + ", you have total xp: " + basicInfo.totalXP + " and you are registered at campus: " + basicInfo.campus 
-  div.appendChild(platformInfo)
+  if(!basicInfo){
+    return
+  }
+
+  document.getElementById("name").innerText = "Hello " + basicInfo.firstName + " " + basicInfo.lastName + "!"
+  document.getElementById("username").innerText = "Username: " + basicInfo.username
+  document.getElementById("campus").innerText = "Campus: " + basicInfo.campus
+  document.getElementById("xp").innerText = "Total XP: " + basicInfo.totalXP
 }
 
 async function xpPerProjectPieChart(form){
   let data = await getData(form, xpQueryPerMajorProject())
+  if(!data){
+    return
+  }
   let values = []
   let labels = []
   for (let project of data.xp_per_major_project){
@@ -372,7 +390,10 @@ async function xpPerProjectPieChart(form){
     labels.push(project.object.name)
   }
   let pieChart = createPieChart(500, values, labels)
-  document.getElementById("svgs").appendChild(pieChart)
+  let titleDiv = document.createElement("div")
+  titleDiv.innerText = "xp per project"
+  document.getElementById("pie").appendChild(titleDiv)
+  document.getElementById("pie").appendChild(pieChart)
 }
 
 async function xpPerMonthLineGraph(form){
@@ -388,86 +409,21 @@ async function xpPerMonthLineGraph(form){
     }
     points.push([i,xp])
   }
-  let lineGraph = createLineGraph("","month", "xp", maxX, maxY, 750, 750, points)
-  document.getElementById("svgs").appendChild(lineGraph)
+  let lineGraph = createLineGraph("xp for 2023","month", "xp", maxX, maxY, 750, 750, points)
+  document.getElementById("graph").appendChild(lineGraph)
   console.log("line graph created!")
 }
 
 async function doStuff(form) {
-  displayBasicInfo(await basicInfo(form))
+  document.getElementById("error").innerText = ""
+  let basicdata = await basicInfo(form)
+  if (!basicdata){
+    document.getElementById("error").innerText = "unable to log in, please check your credentials"
+    return false
+  }
+  document.getElementById("login").innerHTML = `<a href="/static/">logout</a>`
+  displayBasicInfo(basicdata)
   await xpPerProjectPieChart(form)
   await xpPerMonthLineGraph(form)
-  
-  // let lastMonthQuery = xpQueryBeforeDate("01 01 2023");
-  // console.log("last month query: ", lastMonthQuery);
-  // let betweenMonthsQuery = xpQueryBetweenDates("01 01 2023", "05 01 2023")
-  // console.log("between months query: ", betweenMonthsQuery)
-  // let query = {
-  //   query: `query ($lang: jsonb){
-  //     user {
-  //       id
-  //       githubId
-  //       login
-  //       discordId
-  //       discordLogin
-  //       profile
-  //       campus
-  //     }
-  //     transaction {
-  //       id
-  //       type
-  //       amount
-  //       userId
-  //       attrs
-  //       createdAt
-  //       path
-  //       objectId
-  //       eventId
-  //     }
-  //     xp_per_major_project: transaction(where:{type:{_eq:"xp"}, object:{type:{_eq:"project"}}}){
-  //       amount
-  //       object{
-  //         id
-  //         name
-          
-  //       }
-  //     }
-  //     Go_projects_soloable: object(where: {type: {_eq: "project"}, attrs: {_contains: $lang}}) {
-  //       id
-  //       name
-  //       attrs
-  //       childrenAttrs
-  //     }
-  //   }`,
-  //   variables: {
-  //     lang: { language: "Go", groupMin: 1 },
-  //   },
-  // };
-  // let data = await getData(form, query);
-  // console.log("data returned from getData: ", data);
-  // let monthdata = await getData(form, lastMonthQuery);
-  // console.log("month data: ", monthdata);
-  // let betweenMonthsData = await getData(form, betweenMonthsQuery)
-  // console.log("between months data: ", betweenMonthsData)
-
-  // console.log("xp per project: ", await getData(form, xpQueryPerMajorProject()))
-
-  // let pieChart = createPieChart(
-  //   100,
-  //   [5, 5, 10, 20, 30, 50],
-  //   ["adsadasda", "bdsadad", "cdsadsa", "ddsadsa", "edsad", "fdsad"]
-  // );
-  // document.getElementById("svgs").appendChild(pieChart);
-  // document.getElementById("svgs").appendChild(
-  //   createLineGraph("", "time", "xp", "", "", 200, 200, [
-  //     [0, 0],
-  //     [10, 10],
-  //     [10, 20],
-  //     [20, 25],
-  //     [50, 50],
-  //     [100, 100],
-  //     [150, 200],
-  //   ])
-  // );
   return false;
 }
