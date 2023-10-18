@@ -78,77 +78,6 @@ form.addEventListener("submit", async (e) => {
   await doStuff(form);
 });
 
-async function doStuff(form) {
-  let lastMonthQuery = xpQueryBeforeDate("01 01 2023");
-  console.log("last month query: ", lastMonthQuery);
-  let betweenMonthsQuery = xpQueryBetweenDates("01 01 2023", "05 01 2023")
-  console.log("between months query: ", betweenMonthsQuery)
-  let query = {
-    query: `query ($lang: jsonb){
-      user {
-        id
-        githubId
-        login
-        discordId
-        discordLogin
-        profile
-        campus
-      }
-      transaction {
-        id
-        type
-        amount
-        userId
-        attrs
-        createdAt
-        path
-        objectId
-        eventId
-      }
-      xp_per_major_project: transaction(where:{type:{_eq:"xp"}, object:{type:{_eq:"project"}}}){
-        amount
-        object{
-          id
-          name
-          
-        }
-      }
-      Go_projects_soloable: object(where: {type: {_eq: "project"}, attrs: {_contains: $lang}}) {
-        id
-        name
-        attrs
-        childrenAttrs
-      }
-    }`,
-    variables: {
-      lang: { language: "Go", groupMin: 1 },
-    },
-  };
-  let data = await displayData(form, query);
-  console.log("data returned from displayData: ", data);
-  let monthdata = await displayData(form, lastMonthQuery);
-  console.log("month data: ", monthdata);
-  let betweenMonthsData = await displayData(form, betweenMonthsQuery)
-  console.log("between months data: ", betweenMonthsData)
-  let pieChart = createPieChart(
-    100,
-    [5, 5, 10, 20, 30, 50],
-    ["adsadasda", "bdsadad", "cdsadsa", "ddsadsa", "edsad", "fdsad"]
-  );
-  document.getElementById("svgs").appendChild(pieChart);
-  document.getElementById("svgs").appendChild(
-    createLineGraph("", "time", "xp", "", "", 200, 200, [
-      [0, 0],
-      [10, 10],
-      [10, 20],
-      [20, 25],
-      [50, 50],
-      [100, 100],
-      [150, 200],
-    ])
-  );
-  return false;
-}
 
 async function addDataToDiv(div, data) {
   console.log("raw data being added to div: ", data);
@@ -175,51 +104,6 @@ async function addDataToDiv(div, data) {
   }
 }
 
-function dateMonthsBeforeNow(months) {
-  let timeNow = new Date(Date.now());
-  timeNow.setMonth(timeNow.getMonth() - months);
-  return timeNow;
-}
-
-function xpQueryBeforeDate(date) {
-  let queryString = {
-    query:
-      `{
-  xp_before_date: transaction_aggregate(
-    where: {type: {_eq: "xp"}, eventId: {_eq: "134"}, createdAt: {_lt: "` +
-      date +
-      `"}}
-  ) {
-    aggregate {
-      sum {
-        amount
-      }
-    }
-  }
-}`,
-  };
-  return queryString;
-}
-
-function xpQueryBetweenDates(startDate, endDate){
-  let queryString = {
-    query:
-      `{
-  xp_before_date: transaction_aggregate(
-    where: {type: {_eq: "xp"}, eventId: {_eq: "134"}, createdAt: {_lt: "` +
-    endDate +
-      `"}, _and: {createdAt: {_gt: "`+startDate+`"}}}
-  ) {
-    aggregate {
-      sum {
-        amount
-      }
-    }
-  }
-}`,
-  };
-  return queryString;
-}
 
 function createPieChart(radius, values, labels) {
   let total = values.reduce((runningTotal, elem) => runningTotal + elem);
@@ -394,4 +278,134 @@ function createLineGraph(
   lineElem.setAttribute("fill", "none");
   lineGraphSvg.appendChild(lineElem);
   return lineGraphSvg;
+}
+
+function xpQueryBeforeDate(date) {
+  let queryString = {
+    query:
+      `{
+  xp_before_date: transaction_aggregate(
+    where: {type: {_eq: "xp"}, eventId: {_eq: "134"}, createdAt: {_lt: "` +
+      date +
+      `"}}
+  ) {
+    aggregate {
+      sum {
+        amount
+      }
+    }
+  }
+}`,
+  };
+  return queryString;
+}
+
+function xpQueryBetweenDates(startDate, endDate){
+  let queryString = {
+    query:
+      `{
+  xp_before_date: transaction_aggregate(
+    where: {type: {_eq: "xp"}, eventId: {_eq: "134"}, createdAt: {_lt: "` +
+    endDate +
+      `"}, _and: {createdAt: {_gt: "`+startDate+`"}}}
+  ) {
+    aggregate {
+      sum {
+        amount
+      }
+    }
+  }
+}`,
+  };
+  return queryString;
+}
+
+function xpQueryPerMajorProject(){
+  return {query: `{
+    xp_per_major_project: transaction(where:{type:{_eq:"xp"}, object:{type:{_eq:"project"}}}){
+      amount
+      object{
+        id
+        name
+        
+      }
+    }
+  }`}
+}
+
+
+
+async function doStuff(form) {
+  let lastMonthQuery = xpQueryBeforeDate("01 01 2023");
+  console.log("last month query: ", lastMonthQuery);
+  let betweenMonthsQuery = xpQueryBetweenDates("01 01 2023", "05 01 2023")
+  console.log("between months query: ", betweenMonthsQuery)
+  let query = {
+    query: `query ($lang: jsonb){
+      user {
+        id
+        githubId
+        login
+        discordId
+        discordLogin
+        profile
+        campus
+      }
+      transaction {
+        id
+        type
+        amount
+        userId
+        attrs
+        createdAt
+        path
+        objectId
+        eventId
+      }
+      xp_per_major_project: transaction(where:{type:{_eq:"xp"}, object:{type:{_eq:"project"}}}){
+        amount
+        object{
+          id
+          name
+          
+        }
+      }
+      Go_projects_soloable: object(where: {type: {_eq: "project"}, attrs: {_contains: $lang}}) {
+        id
+        name
+        attrs
+        childrenAttrs
+      }
+    }`,
+    variables: {
+      lang: { language: "Go", groupMin: 1 },
+    },
+  };
+  let data = await displayData(form, query);
+  console.log("data returned from displayData: ", data);
+  let monthdata = await displayData(form, lastMonthQuery);
+  console.log("month data: ", monthdata);
+  let betweenMonthsData = await displayData(form, betweenMonthsQuery)
+  console.log("between months data: ", betweenMonthsData)
+
+  console.log("xp per project: ", await displayData(form, xpQueryPerMajorProject()))
+
+  let pieChart = createPieChart(
+    100,
+    [5, 5, 10, 20, 30, 50],
+    ["adsadasda", "bdsadad", "cdsadsa", "ddsadsa", "edsad", "fdsad"]
+  );
+  document.getElementById("svgs").appendChild(pieChart);
+  document.getElementById("svgs").appendChild(
+    createLineGraph("", "time", "xp", "", "", 200, 200, [
+      [0, 0],
+      [10, 10],
+      [10, 20],
+      [20, 25],
+      [50, 50],
+      [100, 100],
+      [150, 200],
+    ])
+  );
+  return false;
 }
