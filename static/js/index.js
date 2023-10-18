@@ -43,31 +43,28 @@ async function graphqlRequest(jwt, query) {
   })
     .then(function (response) {
       if (response.ok) {
-        console.log("response ok: ", response);
         return response.json();
       }
       console.log("graphql request failed: ", response);
       throw response;
     })
     .catch((response) => response);
-  console.log(data);
   return data.data;
 }
 
-async function displayData(form, requestedData) {
+async function getData(form, requestedData) {
   let jwt = await processLogin(form);
   let data = await graphqlRequest(jwt, requestedData);
-  console.log("data after graphql request: ", data);
 
-  let resultsDiv = document.getElementById("results");
-  if (!data) {
-    let errorDiv = document.createElement("div");
-    errorDiv.innerText =
-      "Unfortunately the request failed, please check your credentials or contact the administrator";
-    resultsDiv.appendChild(errorDiv);
-    return;
-  }
-  addDataToDiv(resultsDiv, data);
+  // let resultsDiv = document.getElementById("results");
+  // if (!data) {
+  //   let errorDiv = document.createElement("div");
+  //   errorDiv.innerText =
+  //     "Unfortunately the request failed, please check your credentials or contact the administrator";
+  //   resultsDiv.appendChild(errorDiv);
+  //   return;
+  // }
+  // addDataToDiv(resultsDiv, data);
   return data;
 }
 
@@ -117,21 +114,21 @@ function createPieChart(radius, values, labels) {
     value = values[index];
     let proportion = value / total;
     let angle = proportion * 2 * Math.PI;
-    let colourGrayscale =
-      "rgb(" +
-      (currentAngle * 255) / Math.PI +
-      ", " +
-      (currentAngle * 255) / Math.PI +
-      ", " +
-      (currentAngle * 255) / Math.PI +
-      ")";
     let colour =
       "rgb(" +
-      (255 - (currentAngle * 255) / Math.PI) +
+      (index * 255) / (values.length) +
+      ", " +
+      (index * 255) / (values.length)+
+      ", " +
+      (index * 255) / (values.length) +
+      ")";
+    let colourRedBlue =
+      "rgb(" +
+      (255 - (index * 255) / (values.length)) +
       ", " +
       0 +
       ", " +
-      (currentAngle * 255) / Math.PI +
+      (index * 255) / (values.length) +
       ")";
     pieChart.appendChild(
       createSegmentPath(radius, currentAngle, angle, colour)
@@ -169,16 +166,7 @@ function createPieChart(radius, values, labels) {
 }
 
 function createSegmentPath(r, startAngle, angle, colour) {
-  console.log(
-    "segment created with r: ",
-    r,
-    " starting angle: ",
-    startAngle,
-    " angle: ",
-    angle,
-    " colour: ",
-    colour
-  );
+  
   let moveToCenter = "M " + r + ", " + r + " ";
   let moveToEdge =
     "L " +
@@ -211,8 +199,8 @@ function createLineGraph(
   title,
   xlabel,
   ylabel,
-  xaxis,
-  yaxis,
+  xmax,
+  ymax,
   width,
   height,
   points
@@ -269,9 +257,9 @@ function createLineGraph(
   for (let point in points) {
     pointsStr +=
       " " +
-      (origin[0] + points[point][0]) +
+      (origin[0] + points[point][0]*width/xmax) +
       "," +
-      (origin[1] - points[point][1]);
+      (origin[1] - points[point][1]*height/ymax);
   }
   lineElem.setAttribute("points", pointsStr);
   lineElem.setAttribute("stroke", "black");
@@ -333,79 +321,153 @@ function xpQueryPerMajorProject(){
   }`}
 }
 
-
-
-async function doStuff(form) {
-  let lastMonthQuery = xpQueryBeforeDate("01 01 2023");
-  console.log("last month query: ", lastMonthQuery);
-  let betweenMonthsQuery = xpQueryBetweenDates("01 01 2023", "05 01 2023")
-  console.log("between months query: ", betweenMonthsQuery)
+async function basicInfo(form){
   let query = {
-    query: `query ($lang: jsonb){
-      user {
-        id
-        githubId
+    query: `{
+      user{
         login
-        discordId
-        discordLogin
-        profile
         campus
-      }
-      transaction {
-        id
-        type
-        amount
-        userId
         attrs
-        createdAt
-        path
-        objectId
-        eventId
       }
-      xp_per_major_project: transaction(where:{type:{_eq:"xp"}, object:{type:{_eq:"project"}}}){
-        amount
-        object{
-          id
-          name
-          
+      total_xp: transaction_aggregate(
+        where: {type: {_eq: "xp"}, eventId: {_eq: "134"}}
+      ) {
+        aggregate {
+          sum {
+            amount
+          }
         }
       }
-      Go_projects_soloable: object(where: {type: {_eq: "project"}, attrs: {_contains: $lang}}) {
-        id
-        name
-        attrs
-        childrenAttrs
-      }
-    }`,
-    variables: {
-      lang: { language: "Go", groupMin: 1 },
-    },
-  };
-  let data = await displayData(form, query);
-  console.log("data returned from displayData: ", data);
-  let monthdata = await displayData(form, lastMonthQuery);
-  console.log("month data: ", monthdata);
-  let betweenMonthsData = await displayData(form, betweenMonthsQuery)
-  console.log("between months data: ", betweenMonthsData)
+    }
+    `
+  }
 
-  console.log("xp per project: ", await displayData(form, xpQueryPerMajorProject()))
+  let data = await getData(form, query)
+  let basicInfo = {
+    username: data.user[0].login,
+    campus: data.user[0].campus,
+    firstName: data.user[0].attrs.firstName,
+    lastName: data.user[0].attrs.lastName,
+    totalXP: data.total_xp.aggregate.sum.amount,
+  }
+  return basicInfo
+}
 
-  let pieChart = createPieChart(
-    100,
-    [5, 5, 10, 20, 30, 50],
-    ["adsadasda", "bdsadad", "cdsadsa", "ddsadsa", "edsad", "fdsad"]
-  );
-  document.getElementById("svgs").appendChild(pieChart);
-  document.getElementById("svgs").appendChild(
-    createLineGraph("", "time", "xp", "", "", 200, 200, [
-      [0, 0],
-      [10, 10],
-      [10, 20],
-      [20, 25],
-      [50, 50],
-      [100, 100],
-      [150, 200],
-    ])
-  );
+ function displayBasicInfo(basicInfo){
+  let div = document.getElementById("basicInfo")
+  let greeting = document.createElement("p")
+  greeting.innerText = "Hello " + basicInfo.firstName + " " + basicInfo.lastName + "!"
+  div.appendChild(greeting)
+  let platformInfo = document.createElement("p")
+  platformInfo.innerText = "your username is: " + basicInfo.username + ", you have total xp: " + basicInfo.totalXP + " and you are registered at campus: " + basicInfo.campus 
+  div.appendChild(platformInfo)
+}
+
+async function xpPerProjectPieChart(form){
+  let data = await getData(form, xpQueryPerMajorProject())
+  let values = []
+  let labels = []
+  for (let project of data.xp_per_major_project){
+    values.push(project.amount)
+    labels.push(project.object.name)
+  }
+  let pieChart = createPieChart(500, values, labels)
+  document.getElementById("svgs").appendChild(pieChart)
+}
+
+async function xpPerMonthLineGraph(form){
+  let points = []
+  let maxY = 0
+  let maxX = 12
+  for (let i=0; i<12; i++){
+    let date = (i+1)+" 01 2023"
+    let data = await getData(form, xpQueryBeforeDate(date))
+    let xp = data.xp_before_date.aggregate.sum.amount
+    if (xp > maxY){
+      maxY = xp
+    }
+    points.push([i,xp])
+  }
+  let lineGraph = createLineGraph("","month", "xp", maxX, maxY, 750, 750, points)
+  document.getElementById("svgs").appendChild(lineGraph)
+  console.log("line graph created!")
+}
+
+async function doStuff(form) {
+  displayBasicInfo(await basicInfo(form))
+  await xpPerProjectPieChart(form)
+  await xpPerMonthLineGraph(form)
+  
+  // let lastMonthQuery = xpQueryBeforeDate("01 01 2023");
+  // console.log("last month query: ", lastMonthQuery);
+  // let betweenMonthsQuery = xpQueryBetweenDates("01 01 2023", "05 01 2023")
+  // console.log("between months query: ", betweenMonthsQuery)
+  // let query = {
+  //   query: `query ($lang: jsonb){
+  //     user {
+  //       id
+  //       githubId
+  //       login
+  //       discordId
+  //       discordLogin
+  //       profile
+  //       campus
+  //     }
+  //     transaction {
+  //       id
+  //       type
+  //       amount
+  //       userId
+  //       attrs
+  //       createdAt
+  //       path
+  //       objectId
+  //       eventId
+  //     }
+  //     xp_per_major_project: transaction(where:{type:{_eq:"xp"}, object:{type:{_eq:"project"}}}){
+  //       amount
+  //       object{
+  //         id
+  //         name
+          
+  //       }
+  //     }
+  //     Go_projects_soloable: object(where: {type: {_eq: "project"}, attrs: {_contains: $lang}}) {
+  //       id
+  //       name
+  //       attrs
+  //       childrenAttrs
+  //     }
+  //   }`,
+  //   variables: {
+  //     lang: { language: "Go", groupMin: 1 },
+  //   },
+  // };
+  // let data = await getData(form, query);
+  // console.log("data returned from getData: ", data);
+  // let monthdata = await getData(form, lastMonthQuery);
+  // console.log("month data: ", monthdata);
+  // let betweenMonthsData = await getData(form, betweenMonthsQuery)
+  // console.log("between months data: ", betweenMonthsData)
+
+  // console.log("xp per project: ", await getData(form, xpQueryPerMajorProject()))
+
+  // let pieChart = createPieChart(
+  //   100,
+  //   [5, 5, 10, 20, 30, 50],
+  //   ["adsadasda", "bdsadad", "cdsadsa", "ddsadsa", "edsad", "fdsad"]
+  // );
+  // document.getElementById("svgs").appendChild(pieChart);
+  // document.getElementById("svgs").appendChild(
+  //   createLineGraph("", "time", "xp", "", "", 200, 200, [
+  //     [0, 0],
+  //     [10, 10],
+  //     [10, 20],
+  //     [20, 25],
+  //     [50, 50],
+  //     [100, 100],
+  //     [150, 200],
+  //   ])
+  // );
   return false;
 }
