@@ -127,7 +127,7 @@ async function doStuff(form){
   
   let pieChart = createPieChart(100, [5,5,10,20, 30])
   document.getElementById("svgs").appendChild(pieChart)
-  document.getElementById("svgs").appendChild(createLineGraph("","","","","",""))
+  document.getElementById("svgs").appendChild(createLineGraph("","time","xp","","",200,200,[[0,0],[10,10],[10,20],[20,25],[50,50],[100,100],[150,200]]))
   return false
 }
 
@@ -210,24 +210,46 @@ function createSegmentPath(r, startAngle, angle, colour){
   return path
 }
 
-function createLineGraph(title, xlabel, ylabel, xaxis, yaxis, labels){
+function createLineGraph(title, xlabel, ylabel, xaxis, yaxis, width, height, points){
+  let origin = [50,50+height]
   let lineGraphSvg = document.createElementNS('http://www.w3.org/2000/svg', "svg")
-  lineGraphSvg.setAttribute("width", "200")
-  lineGraphSvg.setAttribute("height", "200")
+  lineGraphSvg.setAttribute("width", 1.5*width)
+  lineGraphSvg.setAttribute("height", 1.5*height)
   let xaxisElem = document.createElementNS('http://www.w3.org/2000/svg',"line")
-  xaxisElem.setAttribute("x1", "0")
-  xaxisElem.setAttribute("x2", "200")
-  xaxisElem.setAttribute("y1", "200")
-  xaxisElem.setAttribute("y2", "200")
+  xaxisElem.setAttribute("x1", origin[0])
+  xaxisElem.setAttribute("x2", origin[0]+width)
+  xaxisElem.setAttribute("y1", origin[1])
+  xaxisElem.setAttribute("y2", origin[1])
   xaxisElem.setAttribute("stroke", "red")
   let yaxisElem = document.createElementNS('http://www.w3.org/2000/svg',"line")
-  yaxisElem.setAttribute("x1", "0")
-  yaxisElem.setAttribute("x2", "0")
-  yaxisElem.setAttribute("y1", "200")
-  yaxisElem.setAttribute("y2", "0")
+  yaxisElem.setAttribute("x1", origin[0])
+  yaxisElem.setAttribute("x2", origin[0])
+  yaxisElem.setAttribute("y1", origin[1])
+  yaxisElem.setAttribute("y2", origin[1]-height)
   yaxisElem.setAttribute("stroke", "blue")
   lineGraphSvg.appendChild(xaxisElem)
   lineGraphSvg.appendChild(yaxisElem)
+  let xlabelElem = document.createElementNS('http://www.w3.org/2000/svg',"text")
+  xlabelElem.setAttribute("x", width/2)
+  xlabelElem.setAttribute("y", 75+height)
+  xlabelElem.innerHTML = xlabel
+  lineGraphSvg.appendChild(xlabelElem)
+  let ylabelElem = document.createElementNS('http://www.w3.org/2000/svg',"text")
+  ylabelElem.setAttribute("x", 0)
+  ylabelElem.setAttribute("y", height/2)
+  ylabelElem.innerHTML = ylabel
+  lineGraphSvg.appendChild(ylabelElem)
+
+  let lineElem = document.createElementNS("http://www.w3.org/2000/svg", "polyline")
+  let pointsStr = ""
+  for (let point in points){
+    pointsStr += " " + (origin[0] + points[point][0]) + "," + (origin[1] - points[point][1])
+    console.log(pointsStr)
+  }
+  lineElem.setAttribute("points", pointsStr)
+  lineElem.setAttribute("stroke", "black")
+  lineElem.setAttribute("fill", "none")
+  lineGraphSvg.appendChild(lineElem)
   return lineGraphSvg
 }
 
