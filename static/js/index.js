@@ -421,7 +421,8 @@ async function doStuff(form) {
     document.getElementById("error").innerText = "unable to log in, please check your credentials"
     return false
   }
-  document.getElementById("login").innerHTML = `<a href="./">logout</a>`
+  let currentUrl = window.location.href
+  document.getElementById("login").innerHTML = `<a href="${currentUrl}">logout</a>`
   displayBasicInfo(basicdata)
   await xpPerProjectPieChart(form)
   await xpPerMonthLineGraph(form)
