@@ -53,39 +53,6 @@ async function getData(form, requestedData) {
   return data;
 }
 
-let form = document.getElementById("loginForm");
-
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  await doStuff(form);
-});
-
-
-async function addDataToDiv(div, data) {
-  console.log("raw data being added to div: ", data);
-  for (let key in data) {
-    let newdiv = document.createElement("div");
-    newdiv.innerText = "results for " + key + ":";
-    if (Array.isArray(data[key])) {
-      let listDiv = document.createElement("ul");
-      for (let elem in data[key]) {
-        let listElem = document.createElement("li");
-        listElem.innerText =
-          "item " + elem + ": " + JSON.stringify(data[key][elem]);
-        listDiv.appendChild(listElem);
-      }
-      newdiv.appendChild(listDiv);
-    } else if (typeof data[key] === "object") {
-      addDataToDiv(newdiv, data[key]);
-    } else {
-      let miscDiv = document.createElement("div");
-      miscDiv.innerText = JSON.stringify(data[key]);
-      newdiv.appendChild(miscDiv);
-    }
-    div.appendChild(newdiv);
-  }
-}
-
 
 function createPieChart(radius, values, labels) {
   let total = values.reduce((runningTotal, elem) => runningTotal + elem);
@@ -137,7 +104,7 @@ function createPieChart(radius, values, labels) {
       "http://www.w3.org/2000/svg",
       "text"
     );
-    keyLabel.innerHTML = labels[index];
+    keyLabel.innerHTML = "project: " + labels[index] + ", xp: " + values[index];
     keyLabel.setAttribute("y", 2 * radius + 10 + 15 * index);
     keyLabel.setAttribute("x", 15);
     key.appendChild(keySquare);
@@ -177,7 +144,7 @@ function createSegmentPath(r, startAngle, angle, colour) {
   let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
   path.setAttribute("d", pathString);
   path.setAttribute("fill", colour);
-  path.setAttribute("stroke", "red");
+  path.setAttribute("stroke", "green");
   return path;
 }
 
@@ -212,7 +179,7 @@ function createLineGraph(
   xaxisElem.setAttribute("x2", origin[0] + width);
   xaxisElem.setAttribute("y1", origin[1]);
   xaxisElem.setAttribute("y2", origin[1]);
-  xaxisElem.setAttribute("stroke", "blue");
+  xaxisElem.setAttribute("stroke", "grey");
   let yaxisElem = document.createElementNS(
     "http://www.w3.org/2000/svg",
     "line"
@@ -221,7 +188,7 @@ function createLineGraph(
   yaxisElem.setAttribute("x2", origin[0]);
   yaxisElem.setAttribute("y1", origin[1]);
   yaxisElem.setAttribute("y2", origin[1] - height);
-  yaxisElem.setAttribute("stroke", "blue");
+  yaxisElem.setAttribute("stroke", "grey");
   lineGraphSvg.appendChild(xaxisElem);
   lineGraphSvg.appendChild(yaxisElem);
   let xlabelElem = document.createElementNS(
@@ -273,7 +240,7 @@ function createLineGraph(
       (origin[1] - points[point][1]*height/ymax);
   }
   lineElem.setAttribute("points", pointsStr);
-  lineElem.setAttribute("stroke", "black");
+  lineElem.setAttribute("stroke", "blue");
   lineElem.setAttribute("fill", "none");
   lineGraphSvg.appendChild(lineElem);
   return lineGraphSvg;
@@ -428,3 +395,9 @@ async function doStuff(form) {
   await xpPerMonthLineGraph(form)
   return false;
 }
+
+let form = document.getElementById("loginForm");
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  await doStuff(form);
+});
