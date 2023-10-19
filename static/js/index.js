@@ -212,7 +212,7 @@ function createLineGraph(
   xaxisElem.setAttribute("x2", origin[0] + width);
   xaxisElem.setAttribute("y1", origin[1]);
   xaxisElem.setAttribute("y2", origin[1]);
-  xaxisElem.setAttribute("stroke", "red");
+  xaxisElem.setAttribute("stroke", "blue");
   let yaxisElem = document.createElementNS(
     "http://www.w3.org/2000/svg",
     "line"

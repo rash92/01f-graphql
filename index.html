@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <link rel="stylesheet" href="./static/css/style.css" />
+    <title>01F Student Data From GraphQL</title>
   </head>
   <body>
     <div id="login">
@@ -14,15 +15,17 @@
         <input type="submit" name="submit" />
       </form>
     </div>
-    <div id="basicInfo">
-      <div id="name"></div>
-      <div id="username"></div>
-      <div id="campus"></div>
-      <div id="xp"></div>
+    <div id="basicInfo" class="basicInfo">
+      <div id="name" class="name"></div>
+      <div id="username" class="username"></div>
+      <div id="campus" class="campus"></div>
+      <div id="xp" class="xp"></div>
     </div>
-    <div id="pie"></div>
-    <div id="graph"></div>
-    <div id="error"></div>
+    <div id="svgs" class="svgs">
+      <div id="pie" class="pie"></div>
+      <div id="graph" class="graph"></div>
+    </div>
+    <div id="error" class="error"></div>
     <script type="text/javascript" src="./static/js/index.js"></script>
   </body>
 </html>

@@ -1,0 +1,27 @@
+body {
+    background-color: grey;
+    color: white;
+}
+
+.name, .campus {
+    background-color: black;
+}
+.username, .xp{
+    background-color: grey;;
+}
+
+.pie {
+    background-color: lightblue;
+    color: black;
+}
+.basicInfo {
+    text-align: center;
+}
+.graph {
+    background-color: lightgreen;
+}
+
+.svgs {
+    display: flex;
+    flex-direction:row;
+}
